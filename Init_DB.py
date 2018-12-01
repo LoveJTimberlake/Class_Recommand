@@ -57,6 +57,7 @@ init_CEI = '''Create Table Cla_ExtraInfo(
             Cla_Diff double(2,1) Not NULL default 0,
             Cla_Interest double(2,1) NOT  NULL default 0,
             Cla_Teacher_Score double(2,1) NOT NULL default 0,
+            Cla_Score double(2,1) NOT NULL default 0,
             Cla_Have_Been_Num int NOT NULL default 0,
             Cla_Comment_Num int NOT NULL default 0,
             Cla_Now_Stu_Num int NOT NULL default 0

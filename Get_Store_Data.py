@@ -23,14 +23,11 @@ class Data_Op:
 #存储新学生的信息 
     def Store_NewStuInfo(self,info):    #info是字典 由json信息在flask那里得到再传过来
         cursor = self.db.cursor()
+        result = {}
         Add_Stu_Info = f"Insert INTO Stu_Info(Stu_ID,Stu_Gender,Stu_Major,Stu_InYear,Stu_Grade,Stu_Aca) values({info['stu_id']},{info['gender']},{info['major']},{info['inyear']},{info['grade']},{info['aca']})"
-        try:
-            cursor.execute(Add_Stu_Info)
-            self.db.commit()
-            cursor.close()
-        except Exception as e:
-            print('Error:%s'%str(e))
-            cursor.close()
+        cursor.execute(Add_Stu_Info)
+        self.db.commit()
+        cursor.close()
 
 #返回该学生的课表
     def Return_StuClaTable(self,info):   #返回一个dict的信息 课程:其基本信息
@@ -39,16 +36,18 @@ class Data_Op:
         result = {}
         search_classes = "select Cla_ID from Stu_Cho_Class where Stu_ID = %s and Term = %s" %(info['stu_id'],info['term'])
         cursor.execute(search_classes)
-        All_Classes = cursor.fetchall()
+        All_Classes = [] 
+        for d  in cursor.fetchall():
+            All_Classes.append(d['Cla_ID'])
         
         #当选择的选课学期上该学生没有选课（历史记录上也没有）时
         if len(All_Classes) == 0:
             result['class_num'] = 0
             return result 
         else:
-            result['class_num'] = 1
+            result['class_num'] = len(All_Classes)
         
-        for class_id in all_classes:
+        for class_id in All_Classes:
             result[class_id] = {}
             get_class_info = "select * from Cla_Info where Cla_ID = %s" %class_id
             cursor.execute(get_class_info)
@@ -61,6 +60,7 @@ class Data_Op:
 #学生修改他的信息
     def Change_StuInfo(self,new_info):   #new_info中包括了完整的学生信息
         cursor = self.db.cursor()
+        result = {}
         update_stu_info = f"update Stu_Info set Stu_Gender = {new_info['gender']}, Stu_Major = {new_info['major']}, Stu_Inyear = {new_info['inyear']}, Stu_Grade = {new_info['grade']}, Stu_Aca = {new_info['aca']} where Stu_ID = {new_info['stu_id']}"
         cursor.execute(update_stu_info)
         self.db.commit()
@@ -100,10 +100,25 @@ class Data_Op:
         com_total_num = len(cursor.fetchall())      #要回去试验对空表这样操作的结果
         comment_id = com_total_num + 1
         
-        add_comment = f"Insert INTO Cla_Comment(Cla_ID,Stu_ID,Text,Time,Score,Comment_ID) values({info['cla_id']},{info['stu_id]},{info['comment']},{info['time']},{info['score']},{comment_id})"
+        add_comment = f"Insert INTO Cla_Comment(Cla_ID,Stu_ID,Text,Time,Score,Comment_ID) values({info['cla_id']},{info['stu_id']},{info['comment']},{info['time']},{info['score']},{comment_id})"
         cursor.execute(add_comment)
         increase_cla_com_num = "update Cla_ExtraInfo set Cla_Comment_Num = Cla_Comment_Num + 1 where Cla_ID = %s" %info['cla_id']
         cursor.execute(increase_cla_com_num)
+
+        #对课程分数进行修改
+        #先获取课程平均分与被评论次数
+        get_avescore_num = 'select Cla_Comment_Num, Cla_Score from Cla_ExtraInfo where Cla_ID = %s'%(info['cla_id'])
+        cursor.execute(get_avescore_num)
+        needed_info_dict = cursor.fetchone()
+        origin_ave = needed_info_dict['Cla_Score']
+        comment_num = needed_info_dict['Cla_Comment_Num']
+        origin_score = origin_ave * comment_num
+        #在原分数基础上加上这次的分数最后求出最终的平均分数
+        new_ave = round((origin_score + info['score'])/(comment_num + 1),1)
+        new_comment_num = comment_num + 1 
+
+        cursor.execute('update Cla_ExtraInfo set Cla_Comment_Num = %s,Cla_Score = %s where Cla_ID = %s'%(new_comment_num,new_ave,info['cla_id']))
+
         self.db.commit()
         cursor.close()
         
@@ -113,10 +128,30 @@ class Data_Op:
 #学生取消评论课程
     def Stu_Del_Com_Cla(self,info):
         cursor = self.db.cursor()
+        #先获取这次的分数
+        get_comment_score = 'select Score from Cla_Comment where Cla_ID = %s'%(info['comment_id'])
+        cursor.commit(get_comment_score)
+        comment_score_dict = cursor.fetchone()
+        comment_score = comment_score_dict['Score']
+
         del_comment = "delete from Cla_Comment where Comment_ID = %s" %info['comment_id']
         cursor.execute(del_comment)
         reduce_cla_com_num = "update Cla_ExtraInfo set Cla_Comment_Num = Cla_Comment_Num - 1 where Cla_ID = %s" %info['cla_id']
         cursor.execute(reduce_cla_com_num)
+
+        get_avescore_num = 'select Cla_Comment_Num, Cla_Score from Cla_ExtraInfo where Cla_ID = %s'%(info['cla_id'])
+        cursor.execute(get_avescore_num)
+        needed_info_dict = cursor.fetchone()
+        origin_ave = needed_info_dict['Cla_Score']
+        comment_num = needed_info_dict['Cla_Comment_Num']
+        origin_score = origin_ave * comment_num
+        #在原分数基础上加上这次的分数最后求出最终的平均分数
+        new_ave = round((origin_score - comment_score)/(comment_num - 1),1)
+        new_comment_num = comment_num - 1 
+
+        cursor.execute('update Cla_ExtraInfo set Cla_Comment_Num = %s,Cla_Score = %s where Cla_ID = %s'%(new_comment_num,new_ave,info['cla_id']))
+
+
         self.db.commit()
         cursor.close()
         
@@ -197,6 +232,7 @@ class Data_Op:
         
 #在数据库中更新学生特征  更新特征时要一个一个对应加上去 所以比较繁琐 后面再弄  
 #隔一段时间运行该函数将特征矩阵存入数据库中
+#在用户编辑标签时则给其赋予最高分
     def Update_StuFeats(self,info,matrix):  #info里面包括了User_id list  还有feat list
         cursor = self.db.cursor()
         feat_list = info['feat_list']
@@ -221,8 +257,9 @@ class Data_Op:
                 cursor.execute(update_cla_feat)
         self.db.commit()
         cursor.close()
-        
-    def Get_Class_Available_ForUser(self,info): #info中有class_id curr_term 查找的可上课程应是过滤了当前学期的课程之后的结果
+
+#获得用户之前没上过的课
+    def Get_Class_NotinPast(self,info): #info中有class_id curr_term 查找的可上课程应是过滤了当前学期的课程之后的结果
         All_Class_ID = [] 
         Ava_Class_ID = []
         Had_Class_ID = []
@@ -242,14 +279,15 @@ class Data_Op:
         return Ava_Class_ID
         
 
-#根据学生id与当前学期来获得该学生这个学期所有可以上的课
+#根据学生id与当前学期来获得该学生这个学期所有可以上的课及其信息
     def Get_Available_Class(self,info):     #info有 stu_id curr_term
         #先构造出表示当前课表的矩阵
         cursor = self.db.cursor()
         now_class_dict = self.Return_StuClaTable(info)
+        #该形式为：now_class_dict = {'a':{'Cla_Start_Time':'1-1,2-3','Cla_Len':'2'}}
         Origin_Class_Table = np.zeros((11,7))
         for per_class,per_class_info in now_class_dict.items():
-            times = per_class_info['Cla_Start_Time'].split(',')
+            times = per_class_info['Cla_StartTime'].split(',')
             for i in range(len(times)):
                 times[i] = str(times[i])
             class_length = int(per_class_info['Cla_Len'])
@@ -260,11 +298,62 @@ class Data_Op:
                 Origin_Class_Table[order-1:order-1+ lengths[i],day-1] = [x %(x-1) for x in range(3,3+lengths[i])]
             
         #然后在课程信息的表中找出用户还未上过的课
-        Choosable_ClassID_List = self.Get_Class_Available_ForUser(info)
+        Choosable_ClassID_List = self.Get_Class_NotinPast(info)
+        #先获取未上过的课的信息
+        cursor.execute('select * from Cla_Info')
+        All_Free_Classes_Info = cursor.fetchall()
+        Final_Free_Classes_List = []
+        for per_free_class_info in All_Free_Classes_Info:
+            times = per_free_class_info['Cla_StartTime'].split(',')
+            for i in range(len(times)):
+                times[i] = str(times[i])
+            class_length = int(per_free_class_info['Cla_Len'])
+            lengths = [class_length for x in range(len(times))]
+            for i in range(len(times)):
+                day = int(times[i].split('-')[0])
+                order = int(times[i].split('-')[1])
+                length = lengths[i]
+                if Origin_Class_Table[order-1:order-1+ lengths[i],day-1].sum() == 0:
+                    Final_Free_Classes_List.append(per_free_class_info)
+        cursor.close()
+        return Final_Free_Classes_List
+
+    def Get_User_Feats(self,info):
+        cursor = self.db.cursor()
+        cursor.execute('select * from Stu_Feat where Stu_ID = %s'%(info['stu_id']))
+        feats_dict = cursor.fetchone()
+        feats_dict.pop('Stu_ID')
+        feats_vector = []
+        for k,v in feats_dict.items():
+            feats_vector.append(v)
+        cursor.close()
+        return feats_vector
+
+    def Get_Cla_Feats(self,info):  #传入的是info:{'cla_id':[,,]}
+        All_Classes_Feats = []
+        cursor = self.db.cursor()
+        for class_id in info['cla_id']:
+            cursor.execute('select * from Cla_Feat where Cla_ID = %s'%(class_id))
+            feats_dict = cursor.fetchone()
+            feats_dict.pop('Cla_ID')
+            feats_vector = []
+            for k,v in feats_dict.items():
+                feats_vector.append(v)
+            All_Classes_Feats.append(feats_vector)
+        cursor.close()
+        return All_Classes_Feats
         
-        
-        
-        
+    def Get_Cla_BasicInfo(self,info):  #info: {'cla_id':id1}
+        cursor = self.db.cursor()
+        class_id = info['cla_id']
+        get_cla_basic_info = 'select * from Cla_Info where Cla_ID = %s'%(class_id)
+        cursor.execute(get_cla_basic_info)
+        class_basicinfo_dict = cursor.fetchone()
+        cursor.close()
+        return class_basicinfo_dict
+
+
+
         
         
         
