@@ -24,7 +24,7 @@ class Data_Op:
     def Store_NewStuInfo(self,info):    #info是字典 由json信息在flask那里得到再传过来
         cursor = self.db.cursor()
         result = {}
-        Add_Stu_Info = f"Insert INTO Stu_Info(Stu_ID,Stu_Gender,Stu_Major,Stu_InYear,Stu_Grade,Stu_Aca) values({info['stu_id']},{info['gender']},{info['major']},{info['inyear']},{info['grade']},{info['aca']})"
+        Add_Stu_Info = f"Insert INTO Stu_Info(Stu_ID,Stu_Gender,Stu_Major,Stu_InYear,Stu_Grade,Stu_Aca,Stu_Password) values({info['stu_id']},{info['gender']},{info['major']},{info['inyear']},{info['grade']},{info['aca']},{info['password']})"
         cursor.execute(Add_Stu_Info)
         self.db.commit()
         cursor.close()
@@ -61,7 +61,7 @@ class Data_Op:
     def Change_StuInfo(self,new_info):   #new_info中包括了完整的学生信息
         cursor = self.db.cursor()
         result = {}
-        update_stu_info = f"update Stu_Info set Stu_Gender = {new_info['gender']}, Stu_Major = {new_info['major']}, Stu_Inyear = {new_info['inyear']}, Stu_Grade = {new_info['grade']}, Stu_Aca = {new_info['aca']} where Stu_ID = {new_info['stu_id']}"
+        update_stu_info = f"update Stu_Info set Stu_Gender = {new_info['gender']}, Stu_Major = {new_info['major']}, Stu_Inyear = {new_info['inyear']}, Stu_Grade = {new_info['grade']}, Stu_Aca = {new_info['aca']},Stu_Password = {new_info['password']} where Stu_ID = {new_info['stu_id']}"
         cursor.execute(update_stu_info)
         self.db.commit()
         cursor.close()
@@ -352,11 +352,40 @@ class Data_Op:
         cursor.close()
         return class_basicinfo_dict
 
-
-
+    def Search_Class(self,info):
+        cursor = self.db.cursor()
+        result = []
+        condition = info['condition']  #这个名词默认是课程名字中的字段 
+        condition = str(condition)
+        #先选择所有的课程名字
+        get_all_title = 'select * from Cla_Info'
+        cursor.execute(get_all_title)
+        all_basic_info = cursor.fetchall()  #所有课程的所有基本信息
+        #匹配名字
+        for d in all_basic_info:
+            if condition in str(d['Cla_Title']):
+                cur_info = d.copy()
+                get_extra_info = "select * from Cla_ExtraInfo where Cla_ID = %s"%(d['Cla_ID'])
+                cursor.execute(get_extra_info)
+                extra_info_dict = cursor.fetchone()
+                for extra_info_key in extra_info_dict.keys():
+                    if extra_info_key not in d.keys():
+                        cur_info[extra_info_key] = extra_info_dict[extra_info_key]
+                result.append(cur_info)
+        cursor.close()
+        return result
         
-        
-        
+    def Login_Verify(self,info):
+        cursor = self.db.cursor()
+        result = 'unknown'
+        cursor.execute('select Stu_Password from Stu_Info where Stu_ID = %s'%(info['stu_id']))
+        correct_password = cursor.fetchone()['Stu_Password']
+        if info['password'] == correct_password:
+            result = 'yes'
+        else:
+            result = 'no'
+        cursor.close()
+        return result
         
         
         

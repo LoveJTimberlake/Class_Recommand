@@ -27,6 +27,22 @@ def GetNewStuInfo():
     
     return jsonify(result)
 
+@app.route('/user/login',methods = ['GET','POST'])
+def Login():
+    result = {}
+    a = request.get_data()
+    infodict = json.load(a)
+    try:
+        ans = DB.Login_Verify(infodict)
+        if ans = 'yes':
+            result['error'] = 0 
+        else:
+            result['error'] = 'Wrong Password or Account'
+    except Exception as e:
+        result['error'] = str(e)
+
+    return jsonify(result)
+
 @app.route('/user/get_table',methods = ['GET','POST'])    #/user/get_table
 def GetStuClaTable():
     result = {}
@@ -73,6 +89,20 @@ def Stu_Del_Cla():
         result['error'] = str(e)
     return jsonify(result)
     
+@app.route('/user/search_class',methods = ['GET','POST'])
+def Stu_Search_Class():
+    result = {} 
+    a = request.get_data()
+    condition_dict = json.load(a)
+    try:
+        result = DB.Search_Class(condition_dict)
+        if len(result) == 0:
+            result['error'] = 'No matched classes were founded'
+        result['error'] = '0'
+    except Exception as e:
+        result['error'] = str(e)
+    return jsonify(result)
+
 @app.route('/user/com_cla',methods = ['GET','POST'])    #/user/com_cla
 def Stu_Com_Cla():
     result = {}

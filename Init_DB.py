@@ -26,7 +26,8 @@ init_SI = '''Create Table Stu_Info(
             Stu_Major varchar(50) NOT NULL,
             Stu_InYear varchar(20) NOT NULL,
             Stu_Grade varchar(20) NOT NULL,
-            Stu_Aca varchar(100) Not NULL   
+            Stu_Aca varchar(100) Not NULL,
+            Stu_Password varchar(20) NOT NULL  
             )'''        #Aca表示学院
 cursor_1.execute(init_SI)
 db.commit()
