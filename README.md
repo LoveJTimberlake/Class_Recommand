@@ -25,3 +25,6 @@ API:
 
 11. URL: /user/return_cla_comment 用户查看课程评论  传入数据：课程ID(字符串）  返回数据： {'Top_Comments':[...],'All_Comments':[...]}
 
+12. URL: /user/login 用户登录 传入数据：用户ID(字符串） 用户密码（字符串（20位）） 返回数据：{'result': 0 } (密码错误时则返回{'result': 'Wrong Password or Account'}, 当有其他错误时则返回{'result':error_message}
+
+13. URL: /user/search_class 用户查找课程 传入数据: 查找条件（字符串）  返回数据 {'classes':[ {'cla_id':'id1',...},{'cla_id':'id2',...},... ],'error':error_message}  
