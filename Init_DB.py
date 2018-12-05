@@ -6,6 +6,9 @@ Created on Mon Nov  5 14:23:06 2018
 @author: justintimberlake
 """
 
+#数据库创建时要用charser utf-8
+
+
 import pymysql 
 
 print('User Name:')
@@ -22,12 +25,13 @@ Tag_List = []   #除了专业学科标签以外再加上[有趣，困难，严�
 cursor_1 = db.cursor()
 init_SI = '''Create Table Stu_Info(
             Stu_ID varchar(20) NOT NULL primary key,
-            Stu_Gender varchar(10) NOT NULL default('unknown'),
+            Stu_Gender varchar(20) NOT NULL default('unknown'),
             Stu_Major varchar(50) NOT NULL,
             Stu_InYear varchar(20) NOT NULL,
             Stu_Grade varchar(20) NOT NULL,
             Stu_Aca varchar(100) Not NULL,
-            Stu_Password varchar(20) NOT NULL  
+            Stu_Password varchar(20) NOT NULL,
+            Stu_Name varchar(20) NOT NULL  
             )'''        #Aca表示学院
 cursor_1.execute(init_SI)
 db.commit()
@@ -59,9 +63,9 @@ init_CEI = '''Create Table Cla_ExtraInfo(
             Cla_Interest double(2,1) NOT  NULL default 0,
             Cla_Teacher_Score double(2,1) NOT NULL default 0,
             Cla_Score double(2,1) NOT NULL default 0,
-            Cla_Have_Been_Num int NOT NULL default 0,
-            Cla_Comment_Num int NOT NULL default 0,
-            Cla_Now_Stu_Num int NOT NULL default 0
+            Cla_Have_Been_Num int(4) NOT NULL default 0,
+            Cla_Comment_Num int(4) NOT NULL default 0,
+            Cla_Now_Stu_Num int(4) NOT NULL default 0
             )'''    #have_been_num 表示已经上过的人 comment_num表示已经评论了的人
 cursor_3.execute(init_CEI)
 db.commit()
@@ -75,8 +79,8 @@ init_CCI = '''Create Table Cla_Comment(
             Helpful_Score int NOT NULL default 0,
             Text varchar(200) NOT NULL,
             Time varchar(30) NOT NULL,
-            Score int NOT NULL,
-            Comment_ID int NOT NULL
+            Score int(4) NOT NULL,
+            Comment_ID varchar(10) NOT NULL
             )'''
 cursor_4.execute(init_CCI)
 db.commit()

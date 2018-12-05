@@ -9,6 +9,8 @@ Created on Mon Nov  5 16:02:56 2018
 import pymysql 
 import numpy
 
+#"%s" -> "\'%s\'"
+#f-string不能用
 
 user_name = 'mozewei'
 pw = 'mozewei19980206'
@@ -18,13 +20,13 @@ pw = 'mozewei19980206'
 class Data_Op:
     def __init__(self):
         self.db = pymysql.connect(host = 'localhost',user = user,password = pw,db = 'class', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
-        self.feats_list = [] 
+        self.feats_list = []   #需要一开始初始化
         
 #存储新学生的信息 
     def Store_NewStuInfo(self,info):    #info是字典 由json信息在flask那里得到再传过来
         cursor = self.db.cursor()
         result = {}
-        Add_Stu_Info = f"Insert INTO Stu_Info(Stu_ID,Stu_Gender,Stu_Major,Stu_InYear,Stu_Grade,Stu_Aca,Stu_Password) values({info['stu_id']},{info['gender']},{info['major']},{info['inyear']},{info['grade']},{info['aca']},{info['password']})"
+        Add_Stu_Info = "Insert INTO Stu_Info(Stu_ID,Stu_Gender,Stu_Major,Stu_InYear,Stu_Grade,Stu_Aca,Stu_Password,Stu_Name) values(\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\')"%(info['stu_id'],info['gender'],info['major'],info['inyear'],info['grade'],info['aca'],info['password'],info['name'])
         cursor.execute(Add_Stu_Info)
         self.db.commit()
         cursor.close()
@@ -34,7 +36,7 @@ class Data_Op:
         #info中包括的是学生ID + 要查看的选课学期 哪个学期的课
         cursor= self.db.cursor()
         result = {}
-        search_classes = "select Cla_ID from Stu_Cho_Class where Stu_ID = %s and Term = %s" %(info['stu_id'],info['term'])
+        search_classes = "select Cla_ID from Stu_Cho_Class where Stu_ID = \'%s\' and Term = \'%s\'" %(info['stu_id'],info['term'])
         cursor.execute(search_classes)
         All_Classes = [] 
         for d  in cursor.fetchall():
@@ -49,7 +51,7 @@ class Data_Op:
         
         for class_id in All_Classes:
             result[class_id] = {}
-            get_class_info = "select * from Cla_Info where Cla_ID = %s" %class_id
+            get_class_info = "select * from Cla_Info where Cla_ID = \'%s\'" %class_id
             cursor.execute(get_class_info)
             class_info = cursor.fetchone()  #dict类型
             for class_feat in ['Cla_ID','Cla_Title','Cla_StartTime','Cla_Len','Cla_Teacher','Cla_Room','Cla_Weeks','Cla_Term']:
@@ -61,7 +63,7 @@ class Data_Op:
     def Change_StuInfo(self,new_info):   #new_info中包括了完整的学生信息
         cursor = self.db.cursor()
         result = {}
-        update_stu_info = f"update Stu_Info set Stu_Gender = {new_info['gender']}, Stu_Major = {new_info['major']}, Stu_Inyear = {new_info['inyear']}, Stu_Grade = {new_info['grade']}, Stu_Aca = {new_info['aca']},Stu_Password = {new_info['password']} where Stu_ID = {new_info['stu_id']}"
+        update_stu_info = "update Stu_Info set Stu_Gender = \'%s\', Stu_Major = \'%s\', Stu_Inyear = \'%s\', Stu_Grade = \'%s\', Stu_Aca = \'%s\',Stu_Password = \'%s\',Stu_Name = \'%s\' where Stu_ID = \'%s\'"%(new_info['gender'], new_info['major'],new_info['inyear'],new_info['grade'], new_info['aca'],new_info['password'],new_info['name'],new_info['stu_id'])
         cursor.execute(update_stu_info)
         self.db.commit()
         cursor.close()
@@ -70,12 +72,12 @@ class Data_Op:
 #学生添加课程
     def Stu_Add_Cla(self,info):  #time去classinfo的表里面查 里面只有 stu_id 与 cla_id
         cursor = self.db.cursor()
-        get_class_time = "select * from Cla_Info where Cla_ID = %s" %(info['cla_id'])
+        get_class_time = "select * from Cla_Info where Cla_ID = \'%s\'" %(info['cla_id'])
         cursor.execute(get_class_time)
         class_time = cursor.fetchone()['Cla_Term']
-        stu_add_class = f"Insert INTO Stu_Cho_Class(Stu_ID,Cla_ID,Term) values({info['stu_id']},{info['cla_id']},{info['term']})"
+        stu_add_class = "Insert INTO Stu_Cho_Class(Stu_ID,Cla_ID,Term) values(\'%s\',\'%s\',\'%s\')"%(info['stu_id'],info['cla_id'],class_time)
         cursor.execute(stu_add_class)
-        increase_cla_stu_num = "update Cla_ExtraInfo set Cla_Now_Stu_Num = Cla_Now_Stu_Num + 1, Cla_Have_Been_Num = Cla_Have_Been_Num + 1 where Cla_ID = %s"%info['cla_id']
+        increase_cla_stu_num = "update Cla_ExtraInfo set Cla_Now_Stu_Num = Cla_Now_Stu_Num + 1, Cla_Have_Been_Num = Cla_Have_Been_Num + 1 where Cla_ID = \'%s\'"%info['cla_id']
         cursor.execute(increase_cla_stu_num)
         self.db.commit()
         cursor.close()
@@ -83,9 +85,9 @@ class Data_Op:
 #学生取消已选课程
     def Stu_Del_Cla(self,info):
         cursor = self.db.cursor()
-        del_class = f"delete from Stu_Cho_Class where Stu_ID = {info['stu_id']} and Cla_ID = {info['cla_id']}"
+        del_class = "delete from Stu_Cho_Class where Stu_ID = \'%s\'and Cla_ID = \'%s\'"%(info['stu_id'],info['cla_id'])
         cursor.execute(del_class)
-        decrease_cla_stu_num = "update Cla_ExtraInfo set Cla_Now_Stu_Num = Cla_Now_Stu_Num - 1, Cla_Have_Been_Num = Cla_Have_Been_Num - 1 where Cla_ID = %s"%info['cla_id']
+        decrease_cla_stu_num = "update Cla_ExtraInfo set Cla_Now_Stu_Num = Cla_Now_Stu_Num - 1, Cla_Have_Been_Num = Cla_Have_Been_Num - 1 where Cla_ID = \'%s\'"%info['cla_id']
         cursor.execute(decrease_cla_stu_num)
         self.db.commit()
         cursor.close()
@@ -98,16 +100,16 @@ class Data_Op:
         get_com_total_num = 'select Comment_ID from Cla_Comment'
         cursor.execute(get_com_total_num)
         com_total_num = len(cursor.fetchall())      #要回去试验对空表这样操作的结果
-        comment_id = com_total_num + 1
+        comment_id = str(com_total_num + 1)
         
-        add_comment = f"Insert INTO Cla_Comment(Cla_ID,Stu_ID,Text,Time,Score,Comment_ID) values({info['cla_id']},{info['stu_id']},{info['comment']},{info['time']},{info['score']},{comment_id})"
+        add_comment = f"Insert INTO Cla_Comment(Cla_ID,Stu_ID,Text,Time,Score,Comment_ID) values(\'%s\',\'%s\',\'%s\',\'%s\',%s,\'%s\')"%(info['cla_id'],info['stu_id'],info['comment'],info['time'],info['score'],comment_id)
         cursor.execute(add_comment)
-        increase_cla_com_num = "update Cla_ExtraInfo set Cla_Comment_Num = Cla_Comment_Num + 1 where Cla_ID = %s" %info['cla_id']
+        increase_cla_com_num = "update Cla_ExtraInfo set Cla_Comment_Num = Cla_Comment_Num + 1 where Cla_ID = \'%s\'" %info['cla_id']
         cursor.execute(increase_cla_com_num)
 
         #对课程分数进行修改
         #先获取课程平均分与被评论次数
-        get_avescore_num = 'select Cla_Comment_Num, Cla_Score from Cla_ExtraInfo where Cla_ID = %s'%(info['cla_id'])
+        get_avescore_num = 'select Cla_Comment_Num, Cla_Score from Cla_ExtraInfo where Cla_ID = \'%s\''%(info['cla_id'])
         cursor.execute(get_avescore_num)
         needed_info_dict = cursor.fetchone()
         origin_ave = needed_info_dict['Cla_Score']
@@ -117,7 +119,7 @@ class Data_Op:
         new_ave = round((origin_score + info['score'])/(comment_num + 1),1)
         new_comment_num = comment_num + 1 
 
-        cursor.execute('update Cla_ExtraInfo set Cla_Comment_Num = %s,Cla_Score = %s where Cla_ID = %s'%(new_comment_num,new_ave,info['cla_id']))
+        cursor.execute('update Cla_ExtraInfo set Cla_Comment_Num = %s,Cla_Score = %s where Cla_ID = \'%s\''%(new_comment_num,new_ave,info['cla_id']))
 
         self.db.commit()
         cursor.close()
@@ -129,17 +131,17 @@ class Data_Op:
     def Stu_Del_Com_Cla(self,info):
         cursor = self.db.cursor()
         #先获取这次的分数
-        get_comment_score = 'select Score from Cla_Comment where Cla_ID = %s'%(info['comment_id'])
+        get_comment_score = 'select Score from Cla_Comment where Cla_ID = \'%s\''%(info['comment_id'])
         cursor.commit(get_comment_score)
         comment_score_dict = cursor.fetchone()
         comment_score = comment_score_dict['Score']
 
-        del_comment = "delete from Cla_Comment where Comment_ID = %s" %info['comment_id']
+        del_comment = "delete from Cla_Comment where Comment_ID = \'%s\'" %info['comment_id']
         cursor.execute(del_comment)
-        reduce_cla_com_num = "update Cla_ExtraInfo set Cla_Comment_Num = Cla_Comment_Num - 1 where Cla_ID = %s" %info['cla_id']
+        reduce_cla_com_num = "update Cla_ExtraInfo set Cla_Comment_Num = Cla_Comment_Num - 1 where Cla_ID = \'%s\'" %info['cla_id']
         cursor.execute(reduce_cla_com_num)
 
-        get_avescore_num = 'select Cla_Comment_Num, Cla_Score from Cla_ExtraInfo where Cla_ID = %s'%(info['cla_id'])
+        get_avescore_num = 'select Cla_Comment_Num, Cla_Score from Cla_ExtraInfo where Cla_ID = \'%s\''%(info['cla_id'])
         cursor.execute(get_avescore_num)
         needed_info_dict = cursor.fetchone()
         origin_ave = needed_info_dict['Cla_Score']
@@ -149,7 +151,7 @@ class Data_Op:
         new_ave = round((origin_score - comment_score)/(comment_num - 1),1)
         new_comment_num = comment_num - 1 
 
-        cursor.execute('update Cla_ExtraInfo set Cla_Comment_Num = %s,Cla_Score = %s where Cla_ID = %s'%(new_comment_num,new_ave,info['cla_id']))
+        cursor.execute('update Cla_ExtraInfo set Cla_Comment_Num = %s,Cla_Score = %s where Cla_ID = \'%s\''%(new_comment_num,new_ave,info['cla_id']))
 
 
         self.db.commit()
@@ -158,7 +160,7 @@ class Data_Op:
 #学生给评论点赞
     def Stu_Star_Com(self,info):
         cursor = self.db.cursor()
-        add_comment_star = "update Cla_Comment set Helpful_Score = HelpfulScore + 1 where Comment_ID = %s" %info['comment_id']
+        add_comment_star = "update Cla_Comment set Helpful_Score = HelpfulScore + 1 where Comment_ID = \'%s\'" %info['comment_id']
         cursor.execute(add_comment_star)
         self.db.commit()
         cursor.close()
@@ -166,7 +168,7 @@ class Data_Op:
 #学生给评论取消点赞
     def Stu_UnStar_Com(self,info):
         cursor = self.db.cursor()
-        add_comment_star = "update Cla_Comment set Helpful_Score = HelpfulScore - 1 where Comment_ID = %s" %info['comment_id']
+        add_comment_star = "update Cla_Comment set Helpful_Score = HelpfulScore - 1 where Comment_ID = \'%s\'" %info['comment_id']
         cursor.execute(add_comment_star)
         self.db.commit()
         cursor.close()
@@ -176,7 +178,7 @@ class Data_Op:
         cursor = self.db.cursor()
         result = {}
         
-        find_cla_extrainfo = "select * from Cla_ExtraInfo where Cla_ID = %s" %info['cla_id']
+        find_cla_extrainfo = "select * from Cla_ExtraInfo where Cla_ID = \'%s\'" %info['cla_id']
         cursor.execute(find_cla_extrainfo)
         cla_extrainfo = cursor.fetchone()
         for key,value in cla_extrainfo.items():
@@ -188,7 +190,7 @@ class Data_Op:
 #返回该课程的评价
     def Return_ClaComment(self,info):
         cursor = self.db.cursor()
-        get_cla_comments = " select * from Cla_Comment where Cla_ID = %s" %info['cla_id']
+        get_cla_comments = " select * from Cla_Comment where Cla_ID = \'%s\'" %info['cla_id']
         cursor.execute(get_cla_comments)
         all_comments = cursor.fetchall()
         if len(all_comments) == 0:
@@ -216,12 +218,14 @@ class Data_Op:
         
 #给课程添加额外信息 （通过现有资料填充） 对于同一个老师讲授的不同时期的同一内容的课，我们使用不同的ID 
 #在已有2018-01《中国文化概论》的情况下 要增加2018-02《中国文化概论》的额外信息时，需要根据cla_title cla_teacher来选择旧的已有课程信息 从而获取其Cla_ID来获取其extrainfo 然后叠加到新的课程中
+    '''
     def Add_ClaExInfo(self,info):
         cursor = self.db.cursor()
-        add_cla_extrainfo = f"Update Cla_ExtraInfo set Cla_Exam = {info['cla_exam']}, Cla_Freq = {info['cla_freq']}, Cla_Diff = {info['cla_diff']}, Cla_Interest = {info['cla_interest']}, Cla_Teacher_Score = {info['cla_teacher_score']}, Cla_Have_Been_Num = {info['cla_have_been_num']}, Cla_Comment_Num = {info['cla_comment_num']}, Cla_Now_Stu_Num = {info['cla_now_comment_num']} where Cla_ID = {info['cla_id']}"
+        add_cla_extrainfo = f"Update Cla_ExtraInfo set Cla_Exam = {info['cla_exam']}, Cla_Freq = {info['cla_freq']}, Cla_Diff = {info['cla_diff']}, Cla_Interest = {info['cla_interest']}, Cla_Teacher_Score = {info['cla_teacher_score']}, Cla_Have_Been_Num = {info['cla_have_been_num']}, Cla_Comment_Num = {info['cla_comment_num']}, Cla_Now_Stu_Num = {info['cla_now_stu_num']} where Cla_ID = {info['cla_id']}"
         cursor.execute(add_cla_extrainfo)
         self.db.commit()
         cursor.close()
+    '''
 
 #info是在推荐系统模块中的功能计算出该学生一定行为后带给其的分数更改
 #Example:
@@ -233,6 +237,7 @@ class Data_Op:
 #在数据库中更新学生特征  更新特征时要一个一个对应加上去 所以比较繁琐 后面再弄  
 #隔一段时间运行该函数将特征矩阵存入数据库中
 #在用户编辑标签时则给其赋予最高分
+    '''
     def Update_StuFeats(self,info,matrix):  #info里面包括了User_id list  还有feat list
         cursor = self.db.cursor()
         feat_list = info['feat_list']
@@ -243,18 +248,18 @@ class Data_Op:
                 cursor.execute(update_stu_feat)
         self.db.commit()
         cursor.close()
-            
+    '''
                             
         
-#在数据库中更新课程特征  隔一段时间运行
-    def Update_ClaFeats(self,info,matrix):     #info中有 class_id list feat list
+#在数据库中更新课程特征  
+    def Update_ClaFeats(self,info):     #info中有 cla_id feats
         cursor = self.db.cursor()
-        feat_list = info['feat_list']
-        class_id_list = info['class_list']
-        for i in range(matrix.shape[0]):
-            for j in range(matrix.shape[1]):
-                update_cla_feat = f'update Cla_Feat set {feat_list[j]} = {matrix[i,j]} where Cla_ID = {class_id_list[i]}'
-                cursor.execute(update_cla_feat)
+        feat_list = info['feats']
+        class_id = info['cla_id']
+        for i in range(len(feat_list)):
+            update_cla_feat = 'update Cla_Feat set %s = %s where Cla_ID = %s'%(self.feats_list[i],%feat_list[i],class_id)
+            cursor.execute(update_cla_feat)
+
         self.db.commit()
         cursor.close()
 
@@ -268,7 +273,7 @@ class Data_Op:
         cursor.execute(get_all_class_id)
         for row in cursor.fetchall():
             All_Class_ID.append(row['Cla_ID'])
-        cursor.execute('select Cla_ID from Stu_Cho_Class where Stu_ID = %s'%(info['stu_id']))
+        cursor.execute('select Cla_ID from Stu_Cho_Class where Stu_ID =\'%s\''%(info['stu_id']))
         for row in cursor.fetchall():
             Had_Class_ID.append(row['Cla_ID'])
         cursor.close()
@@ -320,7 +325,7 @@ class Data_Op:
 
     def Get_User_Feats(self,info):
         cursor = self.db.cursor()
-        cursor.execute('select * from Stu_Feat where Stu_ID = %s'%(info['stu_id']))
+        cursor.execute('select * from Stu_Feat where Stu_ID = \'%s\''%(info['stu_id']))
         feats_dict = cursor.fetchone()
         feats_dict.pop('Stu_ID')
         feats_vector = []
@@ -333,7 +338,7 @@ class Data_Op:
         All_Classes_Feats = []
         cursor = self.db.cursor()
         for class_id in info['cla_id']:
-            cursor.execute('select * from Cla_Feat where Cla_ID = %s'%(class_id))
+            cursor.execute('select * from Cla_Feat where Cla_ID = \'%s\''%(class_id))
             feats_dict = cursor.fetchone()
             feats_dict.pop('Cla_ID')
             feats_vector = []
@@ -346,7 +351,7 @@ class Data_Op:
     def Get_Cla_BasicInfo(self,info):  #info: {'cla_id':id1}
         cursor = self.db.cursor()
         class_id = info['cla_id']
-        get_cla_basic_info = 'select * from Cla_Info where Cla_ID = %s'%(class_id)
+        get_cla_basic_info = 'select * from Cla_Info where Cla_ID = \'%s\''%(class_id)
         cursor.execute(get_cla_basic_info)
         class_basicinfo_dict = cursor.fetchone()
         cursor.close()
@@ -365,7 +370,7 @@ class Data_Op:
         for d in all_basic_info:
             if condition in str(d['Cla_Title']):
                 cur_info = d.copy()
-                get_extra_info = "select * from Cla_ExtraInfo where Cla_ID = %s"%(d['Cla_ID'])
+                get_extra_info = "select * from Cla_ExtraInfo where Cla_ID = \'%s\'"%(d['Cla_ID'])
                 cursor.execute(get_extra_info)
                 extra_info_dict = cursor.fetchone()
                 for extra_info_key in extra_info_dict.keys():
@@ -378,7 +383,7 @@ class Data_Op:
     def Login_Verify(self,info):
         cursor = self.db.cursor()
         result = 'unknown'
-        cursor.execute('select Stu_Password from Stu_Info where Stu_ID = %s'%(info['stu_id']))
+        cursor.execute('select Stu_Password from Stu_Info where Stu_ID = \'%s\''%(info['stu_id']))
         correct_password = cursor.fetchone()['Stu_Password']
         if info['password'] == correct_password:
             result = 'yes'

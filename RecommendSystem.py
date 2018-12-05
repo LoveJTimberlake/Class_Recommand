@@ -10,7 +10,12 @@ import numpy as np
 import math 
 import pymysql 
 import Get_Store_Data as gsd
-
+import thulac 
+import jieba
+import jieba.analyse as jae
+from snownlp import sentiment 
+from snownlp import SnowNLP
+import synonyms
 
 #推荐系统     从数据库获取数据并在内存中进行必要计算与返回推荐结果
 
@@ -70,8 +75,34 @@ class Class_RS:
 
         return Result_Classes_Infos
 
+	#对评论进行处理
+	def NLP(self,context,score,cla_id):
+		#使用SnowNLP来进行情感度计算
+		#使用jeaba.analyse进行关键词提取
+		#用synonyms进行同义词相似度比较
 
+		tag_words = jae.extract_tags(context,topK = 5, withWeight = True, allowPOS = ())
+		Predict_Score = SnowNLP(context).sentiments
+		Final_Tag_Score = {}  #评论中五个关键词及其情感评分
 
+		for word,weight in tag_words:
+			Rank_Dict = dict()
+			for origin_tag in self.Taglist:
+				Rank_Dict[origin_tag] = synonyms.compare(word,origin_tag,seg = True)
+
+			Sorted_Rank_Dict = sorted(Rank_Dict.items, key = lambda x : x[1], reverse = True)
+			Most_Similiar_Tag = Sorted_Rank_Dict[0][0]
+			Similiar_Score = Sorted_Rank_Dict[0][1]
+			Final_Tag_Score[Most_Similiar_Tag] = score * Predict_Score * Similiar_Score * weight
+
+		#将评论中提取的特征：评分加入到课程的特征中
+		origin_feat_vector = self.DataGetter.Get_Cla_Feats({'cla_id':cla_id})
+		for tag,score in Final_Tag_Score.items():
+			index = self.Taglist.index(tag)
+			origin_feat_vector[index] += 0.2 * score
+
+		new_info = {'cla_id':cla_id,'feats':origin_feat_vector}
+		self.DataGetter.Update_ClaFeats(new_info)
 
 
 

@@ -18,7 +18,7 @@ DB = Data_Op()
 def GetNewStuInfo():
     result = {}
     a = request.get_data()
-    infodict = json.load(a)
+    infodict = json.load(a.decode('utf-8'))
     try:
         DB.Store_NewStuInfo(infodict)
         result['error'] = '0'
@@ -31,7 +31,7 @@ def GetNewStuInfo():
 def Login():
     result = {}
     a = request.get_data()
-    infodict = json.load(a)
+    infodict = json.load(a.decode('utf-8'))
     try:
         ans = DB.Login_Verify(infodict)
         if ans = 'yes':
@@ -47,7 +47,7 @@ def Login():
 def GetStuClaTable():
     result = {}
     a = request.get_data()
-    infodict = json.load(a)
+    infodict = json.load(a.decode('utf-8'))
     result = DB.Return_StuClaTable(infodict)
     result['error'] = '0'
     return jsonify(result)
@@ -56,7 +56,7 @@ def GetStuClaTable():
 def ChangeStuInfo():
     result = {}
     a = request.get_data()
-    infodict = json.load(a)
+    infodict = json.load(a.decode('utf-8'))
     try:
         DB.Change_StuInfo(infodict)
         result['error'] = '0'
@@ -69,7 +69,7 @@ def ChangeStuInfo():
 def Stu_Add_Cla():
     result = {} 
     a = request.get_data()
-    infodict = json.load(a)
+    infodict = json.load(a.decode('utf-8'))
     try:
         DB.Stu_Add_Cla(infodict)
         result['error'] = '0'
@@ -81,7 +81,7 @@ def Stu_Add_Cla():
 def Stu_Del_Cla():
     result = {} 
     a = request.get_data()
-    infodict = json.load(a)
+    infodict = json.load(a.decode('utf-8'))
     try:
         DB.Stu_Del_Cla(infodict)
         result['error'] = '0'
@@ -93,9 +93,9 @@ def Stu_Del_Cla():
 def Stu_Search_Class():
     result = {} 
     a = request.get_data()
-    condition_dict = json.load(a)
+    condition_dict = json.load(a.decode('utf-8'))
     try:
-        result = DB.Search_Class(condition_dict)
+        result['classes'] = DB.Search_Class(condition_dict)
         if len(result) == 0:
             result['error'] = 'No matched classes were founded'
         result['error'] = '0'
@@ -107,7 +107,7 @@ def Stu_Search_Class():
 def Stu_Com_Cla():
     result = {}
     a = request.get_data()
-    infodict = json.load(a)
+    infodict = json.load(a.decode('utf-8'))
     try:
         comment_id = DB.Stu_Com_Cla(infodict)
         result['comment_id'] = comment_id
@@ -121,7 +121,7 @@ def Stu_Com_Cla():
 def Stu_Del_Com_Cla():
     result = {} 
     a = request.get_data()
-    infodict = request.get_data(a)
+    infodict = request.get_data(a.decode('utf-8'))
     try:
         DB.Stu_Del_Com_Cla(infodict)
         result['error'] = '0'
@@ -134,7 +134,7 @@ def Stu_Del_Com_Cla():
 def Stu_Star_Com():
     result = {} 
     a = request.get_data()
-    infodict = request.get_data(a)
+    infodict = request.get_data(a.decode('utf-8'))
     try:
         DB.Stu_Star_Com(infodict)
         result['error'] = '0'
@@ -147,7 +147,7 @@ def Stu_Star_Com():
 def Stu_UnStar_Com():
     result = {} 
     a = request.get_data()
-    infodict = request.get_data(a)
+    infodict = request.get_data(a.decode('utf-8'))
     try:
         DB.Stu_UnStar_Com(infodict)
         result['error'] = '0'
@@ -160,7 +160,7 @@ def Stu_UnStar_Com():
 def Return_ClaExtraInfo():
     result = {}
     a = request.get_data()
-    infodict = json.load(a)
+    infodict = json.load(a.decode('utf-8'))
     try:
         result = DB.Return_ClaExInfo(infodict)
         result['error'] = '0'
@@ -173,7 +173,7 @@ def Return_ClaExtraInfo():
 def Return_ClaComment():
     result = {}
     a = request.get_data()
-    infodict = json.load(a)
+    infodict = json.load(a.decode('utf-8'))
     try:
         result = DB.Return_ClaComment(infodict)
         result['error'] = '0'
@@ -186,7 +186,7 @@ def Return_ClaComment():
 def Add_Cla_ExInfo():
     result = {}
     a = request.get_data()
-    infodict = json.load(a)
+    infodict = json.load(a.decode('utf-8'))
     try:
         DB.Add_ClaExInfo(infodict)
         result['error'] = '0' 
