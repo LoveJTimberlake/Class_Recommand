@@ -12,8 +12,8 @@ import numpy
 #"%s" -> "\'%s\'"
 #f-string不能用
 
-user_name = 'mozewei'
-pw = 'mozewei19980206'
+user_name = 'root'
+pw = 'root'
 
 #db = pymysql.connect(host = 'localhost',user = user,password = pw,db = 'class', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)	#doubts			数据库权限初始化：grant all  on *.* to 'mozart'@'localhost' identified by 'mozewei19980206';
 
