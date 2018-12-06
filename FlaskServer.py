@@ -197,7 +197,7 @@ def Add_Cla_ExInfo():
 
 
 def run_server(app):
-    app.run(debug = False,host = '172.20.10.5', port = 5000)    #host地址待改
+    app.run(debug = False,host = '120.79.246.65', port = 5000)    #host地址待改
     
 
 
