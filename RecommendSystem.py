@@ -38,8 +38,7 @@ import synonyms
 
 class Class_RS:
 	def __init__(self):
-		self.Taglist = [] 
-		self.ClassList = []
+		self.Taglist = ['机械','建筑','美术','音乐','土木','电力','电子','材料','化学','生物','物理','体育','计算机','数学','金融','经济学','工管','自动化','新传','法律','外语','医学','有趣','困难','严格']   #除了专业学科标签以外再加上[有趣，困难，严格]（后面再加） 
 		self.DataGetter = gsd.Data_Op()   
         
 	def Return_RecommendList(self,user_id,curr_term):
@@ -51,7 +50,7 @@ class Class_RS:
         User_Feats = self.DataGetter.Get_User_Feats(info)
         #获取课程的标签向量
         class_info = {'cla_id':Choosable_ClassesInfo_List}
-        Class_Feats = self.DataGetter.Get_Class_Feats(class_info)  #返回的是所有可上课程的标签多维数组
+        Class_Feats = self.DataGetter.Get_Cla_Feats(class_info)  #返回的是所有可上课程的标签多维数组
 
         #然后计算最近的课程(这个矩阵每一行对应着Choosable_ClassesInfo_List的每一个课程id)
         dist_dict = {} 

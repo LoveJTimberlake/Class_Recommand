@@ -8,7 +8,6 @@ Created on Mon Nov  5 16:02:56 2018
 
 import pymysql 
 import numpy
-
 #"%s" -> "\'%s\'"
 #f-string不能用
 
@@ -391,9 +390,6 @@ class Data_Op:
             result = 'no'
         cursor.close()
         return result
-        
-        
-        
         
         
         

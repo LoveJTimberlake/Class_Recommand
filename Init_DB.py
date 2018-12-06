@@ -19,7 +19,7 @@ pw = input()
 #连接数据库
 db = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'class', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)	#doubts			数据库权限初始化：grant all  on *.* to 'mozart'@'localhost' identified by 'mozewei19980206';
 
-Tag_List = []   #除了专业学科标签以外再加上[有趣，困难，严格]（后面再加）
+Tag_List = ['机械','建筑','美术','音乐','土木','电力','电子','材料','化学','生物','物理','体育','计算机','数学','金融','经济学','工管','自动化','新传','法律','外语','医学','有趣','困难','严格']   #除了专业学科标签以外再加上[有趣，困难，严格]（后面再加）
 
 #学生基本信息表
 cursor_1 = db.cursor()
@@ -89,7 +89,7 @@ cursor_4.close()
 #学生选课行为表（若取消选课则从该表中删除）  在新用户登陆后，将其当前已选课程传回
 cursor_5 = db.cursor()
 init_SCC = '''Create Table Stu_Cho_Class(
-            Stu_ID varchar(20) NOT NULL primary key,
+            Stu_ID varchar(20) NOT NULL,
             Cla_ID varchar(20) NOT NULL,
             Term varchar(30) NOT NULL, 
             )'''        #Term的格式是 2018-1 2018年第一个学期

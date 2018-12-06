@@ -9,10 +9,11 @@ Created on Mon Nov 12 13:53:25 2018
 from flask import Flask, request ,jsonify
 import json 
 from Get_Store_Data import Data_Op
-
+from RecommendSystem import Class_RS
 
 app = Flask(__name__)
 DB = Data_Op()
+CRS = Class_RS()
 
 @app.route('/user/new_user',methods = ['GET','POST'])    # /user/new_user
 def GetNewStuInfo():
@@ -22,10 +23,11 @@ def GetNewStuInfo():
     try:
         DB.Store_NewStuInfo(infodict)
         result['error'] = '0'
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
+        return jsonify(result)
     
-    return jsonify(result)
 
 @app.route('/user/login',methods = ['GET','POST'])
 def Login():
@@ -38,10 +40,12 @@ def Login():
             result['error'] = 0 
         else:
             result['error'] = 'Wrong Password or Account'
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
+        return jsonify(result)
 
-    return jsonify(result)
+
 
 @app.route('/user/get_table',methods = ['GET','POST'])    #/user/get_table
 def GetStuClaTable():
@@ -60,10 +64,11 @@ def ChangeStuInfo():
     try:
         DB.Change_StuInfo(infodict)
         result['error'] = '0'
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
+        return jsonify(result)
 
-    return jsonify(result)
 
 @app.route('/user/add_cla',methods = ['GET','POST'])    #/user/add_cla
 def Stu_Add_Cla():
@@ -73,9 +78,11 @@ def Stu_Add_Cla():
     try:
         DB.Stu_Add_Cla(infodict)
         result['error'] = '0'
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
-    return jsonify(result)
+        return jsonify(result)
+
 
 @app.route('/user/del_cla',methods = ['GET','POST'])    #/user/del_cla
 def Stu_Del_Cla():
@@ -85,9 +92,11 @@ def Stu_Del_Cla():
     try:
         DB.Stu_Del_Cla(infodict)
         result['error'] = '0'
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
-    return jsonify(result)
+        return jsonify(result)
+
     
 @app.route('/user/search_class',methods = ['GET','POST'])
 def Stu_Search_Class():
@@ -99,9 +108,11 @@ def Stu_Search_Class():
         if len(result) == 0:
             result['error'] = 'No matched classes were founded'
         result['error'] = '0'
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
-    return jsonify(result)
+        return jsonify(result)
+
 
 @app.route('/user/com_cla',methods = ['GET','POST'])    #/user/com_cla
 def Stu_Com_Cla():
@@ -112,10 +123,12 @@ def Stu_Com_Cla():
         comment_id = DB.Stu_Com_Cla(infodict)
         result['comment_id'] = comment_id
         result['error'] = '0'
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
+        return jsonify(result)
     
-    return jsonify(result)
+
 
 @app.route('/user/del_com_cla',methods = ['GET','POST'])    #/user/del_com_cla
 def Stu_Del_Com_Cla():
@@ -125,10 +138,11 @@ def Stu_Del_Com_Cla():
     try:
         DB.Stu_Del_Com_Cla(infodict)
         result['error'] = '0'
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
+        return jsonify(result)
     
-    return jsonify(result)
 
 @app.route('/user/star_com',methods = ['GET','POST'])    #/user/star_com
 def Stu_Star_Com():
@@ -138,10 +152,11 @@ def Stu_Star_Com():
     try:
         DB.Stu_Star_Com(infodict)
         result['error'] = '0'
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
+        return jsonify(result)
     
-    return jsonify(result)
 
 @app.route('/user/unstar_com',methods = ['GET','POST'])    #/user/unstar_com
 def Stu_UnStar_Com():
@@ -151,10 +166,12 @@ def Stu_UnStar_Com():
     try:
         DB.Stu_UnStar_Com(infodict)
         result['error'] = '0'
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
+        return jsonify(result)
     
-    return jsonify(result)
+
 
 @app.route('/user/cla_extra_info',methods = ['GET','POST'])    #/user/cla_extra_info
 def Return_ClaExtraInfo():
@@ -164,10 +181,11 @@ def Return_ClaExtraInfo():
     try:
         result = DB.Return_ClaExInfo(infodict)
         result['error'] = '0'
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
-    
-    return jsonify(result)
+        return jsonify(result)
+
 
 @app.route('/user/return_cla_comment',methods = ['GET','POST'])    #/user/return_cla_comment
 def Return_ClaComment():
@@ -177,10 +195,12 @@ def Return_ClaComment():
     try:
         result = DB.Return_ClaComment(infodict)
         result['error'] = '0'
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
+        return jsonify(result)
     
-    return jsonify(result)
+
 
 @app.route('/class/add_extra_info',methods = ['GET','POST'])    #/class/add_extra_info
 def Add_Cla_ExInfo():
@@ -190,10 +210,26 @@ def Add_Cla_ExInfo():
     try:
         DB.Add_ClaExInfo(infodict)
         result['error'] = '0' 
+        return jsonify(result)
     except Exception as e:
         result['error'] = str(e)
+        return jsonify(result)
         
-    return result
+
+
+@app.route('/user/recommand',methods = ['POST','GET'])
+def Get_Recommand_Class():
+    result = {}
+    a = request.get_data()
+    infodict = json.load(a.decode('utf-8'))
+    try:
+        result['result'] = CRS.Return_Recommand_Result(infodict['stu_id'],infodict['term'])
+        result['error'] = '0'
+        return jsonify(result)
+    except Exception as e:
+        result['error'] = str(e)
+        return jsonify(result)
+
 
 
 def run_server(app):
